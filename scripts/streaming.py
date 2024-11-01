@@ -6,7 +6,7 @@ spark = SparkSession.builder.appName("streaming").getOrCreate()
 
 ds = (
     spark.readStream.format("kafka")
-    .option("kafka.bootstrap.servers", "host1:port1,host2:port2")
+    .option("kafka.bootstrap.servers", "kafka:9092,kafka:9093")
     .option("subscribe", "spark-training")
     .load()
 )

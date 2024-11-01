@@ -2,7 +2,9 @@ version: '3.9'
 
 services:
   spark:
-    image: apache/spark:3.5.3
+    build:
+      context: .
+      dockerfile: ./docker/spark-with-kafka.Dockerfile
     user: 185:185
     container_name: spark
     ports:

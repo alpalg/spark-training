@@ -4,10 +4,17 @@ from pyspark.sql.types import StructType, StructField, StringType
 
 spark = SparkSession.builder.appName("streaming").getOrCreate()
 
+# Expected data
+"""
+{"student_name":"someXXperson", "graduation_year":"2023", "major":"math"}
+{"student_name":"liXXyao", "graduation_year":"2025", "major":"physics"}
+"""
+
 ds = (
     spark.readStream.format("kafka")
-    .option("kafka.bootstrap.servers", "kafka:9092,kafka:9093")
+    .option("kafka.bootstrap.servers", "kafka:9095,kafka:9096")
     .option("subscribe", "spark-training")
+    .option("startingOffsets", "earliest")
     .load()
 )
 
@@ -35,14 +42,15 @@ def with_normalized_names(df: DataFrame, schema: StructType) -> DataFrame:
     )
 
 def perform_available_now_data():
-    checkpoint_path = "data/tmp_students_checkpoint"
-    path = "data/tmp_students"
+    checkpoint_path = "/opt/spark/work-dir/spark-warehouse/tmp_students_checkpoint"
+    path = "/opt/spark/work-dir/spark-warehouse/tmp_students"
     return (
         ds.transform(lambda df: with_normalized_names(df, student_schema))
         .writeStream.trigger(availableNow=True)
-        .format("parquet")
+        .format("csv")
         .option("checkpointLocation", checkpoint_path).start(path)
     )
 
 if __name__ == "__main__":
-    perform_available_now_data()
+    query = perform_available_now_data()
+    query.awaitTermination()

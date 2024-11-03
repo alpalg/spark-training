@@ -12,7 +12,7 @@ spark = SparkSession.builder.appName("streaming").getOrCreate()
 
 ds = (
     spark.readStream.format("kafka")
-    .option("kafka.bootstrap.servers", "kafka:9095,kafka:9096")
+    .option("kafka.bootstrap.servers", "kafka:9092,kafka:9093")
     .option("subscribe", "spark-training")
     .option("startingOffsets", "earliest")
     .load()
@@ -39,6 +39,7 @@ def with_normalized_names(df: DataFrame, schema: StructType) -> DataFrame:
         parsed_df.withColumn("first_name", split_col.getItem(0))
         .withColumn("last_name", split_col.getItem(1))
         .drop(col("student_name"))
+        .drop(col("key"))
     )
 
 def perform_available_now_data():
@@ -47,7 +48,7 @@ def perform_available_now_data():
     return (
         ds.transform(lambda df: with_normalized_names(df, student_schema))
         .writeStream.trigger(availableNow=True)
-        .format("csv")
+        .format("parquet")
         .option("checkpointLocation", checkpoint_path).start(path)
     )
 
